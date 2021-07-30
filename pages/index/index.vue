@@ -8,7 +8,7 @@
 			 <view class="pubuBox">
 			            <view class="pubuItem">
 			                <view class="item-masonry" v-for="(item, index) in comList" :key="index">
-			                    <image :src="item.img" mode="widthFix"></image>
+			                    <image :src="item.img" mode="widthFix" @click="toDeali(item.name)"></image>
 			                    <view class="listtitle"> <!-- 这是没有高度的父盒子（下半部分） -->
 			                        <view class="listtitle1">{{ item.des }}</view>
 			                        <view class="listtitle2">
@@ -85,6 +85,11 @@
 			goForm(){
 				uni.navigateTo({
 					url:"../inputForm/inputForm"
+				})
+			},
+			toDeali(name){
+				uni.navigateTo({
+					url:`../detail/detail?name=${name}`
 				})
 			}
 		}
