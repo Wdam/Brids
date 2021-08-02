@@ -2,6 +2,7 @@
 	<view>
 		<view class="top_img">
 			<view class="preImg" v-for="(item,index) in tempImg" :key='index'>
+
 				<image :src="item" mode="" @click="lookImg(index)"></image>
 				<span class="image-remove" @click="removeImage(index)">+</span>
 			</view>
@@ -33,6 +34,7 @@
 		data() {
 			return {
 				tempImg:[],
+				
 				flag:true,
 				form:{
 					id:'',
@@ -42,11 +44,12 @@
 					zhong:'',
 					name:'',
 					des:'',
-					img:'',
+					img:[],
 					
 				}
 			};
 		},
+	
 		 onBackPress() {
 			//判断数据库是否打开 
 		const isopen = plus.sqlite.isOpenDatabase({
@@ -64,11 +67,14 @@
 					count:3,
 					sourceType:['album','camera'],
 					success: (res) => {
+						//this.tempImg.push(res.tempFilePaths)
 						this.tempImg = res.tempFilePaths
-						console.log(this.tempImg)
+						//console.log(this.tempImg)
+						
 					}
 				})
 			},
+			
 			lookImg(index){
 				const urls=  this.tempImg
 				const current = index
@@ -82,41 +88,61 @@
 				this.tempImg.splice(index,1)
 			},
 			saveInfo(){
-				console.log('111')
+				console.log('saveInfo')
 				//console.log(this.tempImg)
-				this.form.img = this.tempImg[0]
+				this.form.img = this.tempImg
 				this.getTime()
 				console.log(this.form)
-				this.openDB()
+				uni.showModal({
+					title:'警告',
+					content:'确认提交吗',
+					success: (res) => {
+						if(res.confirm){
+							this.openDB()
+							this.executeSQL()
+							uni.navigateBack({
+								delta:1
+							})
+						}else if(res.cancel){
+							console.log('用户点击取消')
+						}
+					}
+				})
 			},
 			getTime(){
 				const time = Date.parse(new Date())
 				this.form.id = time
 			},
 			 openDB(){
-				
-				 plus.sqlite.openDatabase({
-					name:'brids',
-					path:'_doc/brids.db',
-					success:(e)=>{
-						console.log('openDatabase')
-						this.executeSQL()
-						
-						 
-					},
-					fail:(e)=>{
-						console.log("fail"+JSON.stringify((e)))
-						this.closeDB()
+				 const isopen = plus.sqlite.isOpenDatabase({
+				 		name:'brids',
+				 		path:'_doc/brids.db'
+				 	})
+					if(!isopen){
+						plus.sqlite.openDatabase({
+							name:'brids',
+							path:'_doc/brids.db',
+							success:(e)=>{
+								console.log('openDatabase')
+							},
+							fail:(e)=>{
+									console.log("fail"+JSON.stringify((e)))
+									//this.closeDB()
+								}
+							})
+					}else{
+						console.log('opened')
 					}
-				})
+				 
+					
 			},
 			executeSQL(){
 				//创建表
 
 				plus.sqlite.executeSql({
 					name:'brids',
-					sql:'create table if not exists database("id" INT(20),"mu" CHAR(50),"ke" CHAR(50),"shu" CHAR(50),"zhong" CHAR(50),"name" CHAR(50),"des" CHAR(400),"CHAR"CHAR(100))',
-					success:(e)=>{
+					sql:'create table if not exists bridstable("id" INT(20),"mu" CHAR(50),"ke" CHAR(50),"shu" CHAR(50),"zhong" CHAR(50),"name" CHAR(50),"des" CHAR(400),"img"CHAR(300))',
+					success:(e)=>{                          //${id}','${mu}','${ke}','${shu}','${zhong}','${name}','${des}','${img}'
 						
 						console.log('executeSql success!')
 						//插入数据
@@ -133,7 +159,7 @@
 				
 				plus.sqlite.executeSql({
 					name:'brids',
-					sql:`insert into database values('${id}','${mu}','${ke}','${shu}','${zhong}','${name}','${des}','${img}')`,
+					sql:`insert into bridstable values('${id}','${mu}','${ke}','${shu}','${zhong}','${name}','${des}','${img}')`,
 					success:()=>{
 						console.log("insert success")
 						
@@ -171,8 +197,8 @@
 	
 	.preImg{
 		position: relative;
-		width: 200rpx;
-		height: 200rpx;
+		width: 150rpx;
+		height: 150rpx;
 		border-radius: 20px;
 		overflow: hidden;
 		margin-left: 10px;
@@ -200,8 +226,8 @@
 		}
 	}
 	.chooseImg{
-		width: 200rpx;
-		height: 200rpx;
+		width: 150rpx;
+		height: 150rpx;
 		background: #f4f5f6;
 		border-radius: 20px;
 		margin-left: 10px;
